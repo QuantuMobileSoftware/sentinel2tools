@@ -1,0 +1,3 @@
+gsutil==4.53
+geopandas==0.8.1
+pandas==1.1.3

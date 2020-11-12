@@ -1,0 +1,10 @@
+/env/
+__pycache__/
+/tmp/
+/data/weather/
+/data/input/
+/data/images/
+/data/crops_images/
+*.kml
+*.html
+/notebooks/.ipynb_checkpoints/
