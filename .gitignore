@@ -107,5 +107,6 @@ venv.bak/
 
 *.secret
 *.secure
+sentinel2_imagery
 jupyter
 data
