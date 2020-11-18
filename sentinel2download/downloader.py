@@ -91,7 +91,7 @@ class Sentinel2Downloader:
                     if parsed_value > value:
                         return False
                 else:
-                    print(f"Constraint: {constraint} not present in metadata: {metadata_blob.name}")
+                    logger.info(f"Constraint: {constraint} not present in metadata: {metadata_blob.name}")
         except Exception as ex:
             logger.info(f"Error parsing blob metadata: {metadata_blob.name}: {str(ex)}")
             return False
@@ -152,6 +152,7 @@ class Sentinel2Downloader:
 
         with open(save_path, 'wb') as file:
             blob.download_to_file(file)
+        logger.info(f"Loaded {blob.name}")
         return True, blob.name
 
     def download_blobs_mult(self, blobs):
