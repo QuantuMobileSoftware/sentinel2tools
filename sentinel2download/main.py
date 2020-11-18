@@ -2,7 +2,7 @@ from sentinel2download.downloader import Sentinel2Downloader
 
 
 if __name__ == '__main__':
-    api_key = f"../.secure/key.json"
+    api_key = f"../.secret/google_api_key.json"
 
     start_date = "2020-07-01"
     end_date = "2020-07-10"
