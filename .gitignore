@@ -110,3 +110,4 @@ venv.bak/
 sentinel2_imagery
 jupyter
 data
+docker-compose.yml
