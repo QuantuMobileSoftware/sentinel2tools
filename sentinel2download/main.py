@@ -1,25 +1,23 @@
-import os
-import re
-import subprocess
-
-from google.cloud import storage
-
 from sentinel2download.downloader import Sentinel2Downloader
 
 
 if __name__ == '__main__':
-    print("YES")
+    api_key = f"../.secure/key.json"
 
-    loader = Sentinel2Downloader()
     start_date = "2020-07-01"
-    end_date = "2020-07-05"
+    end_date = "2020-07-10"
     tiles = {'36UYB', }
-    type_ = 'L1С'
-    output_dir = '../data'
-    cores = 2
+    type_ = 'L1C'
+    output_dir = '../sentinel2_imagery'
+    cores = 1
+    BANDS = {'TCI', 'B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B8A', 'B09', 'B10', 'B11', 'B12', }
+    verbose = True
 
-    loader.download(type_, tiles, start_date, end_date, output_dir, cores=2)
+    CONSTRAINTS = {'NODATA_PIXEL_PERCENTAGE': 100.0, 'CLOUDY_PIXEL_PERCENTAGE': 100.0, }
 
+    loader = Sentinel2Downloader(api_key)
+    loaded = loader.download(type_, tiles, start_date=start_date, end_date=end_date, output_dir=output_dir, cores=2,
+                             bands=BANDS, constraints=CONSTRAINTS, verbose=verbose)
 
-
-
+    for l in loaded:
+        print(l)
