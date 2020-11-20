@@ -27,7 +27,14 @@ class Sentinel2Downloader:
     Class for loading Sentinel2 L1C or L2A images
     """
 
-    def __init__(self, api_key):
+    def __init__(self, api_key: str, verbose: bool = False):
+        """
+        :param api_key: str, path to google key, https://cloud.google.com/storage/docs/public-datasets/sentinel-2
+        :param verbose: bool, flag, print logging information, default: False
+        """
+        if verbose:
+            logging.basicConfig(level=logging.INFO)
+
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = api_key
         self.client = storage.Client()
         self.bucket = self.client.get_bucket('gcp-public-data-sentinel-2')
@@ -106,7 +113,7 @@ class Sentinel2Downloader:
         save_path = Path(self.output_dir) / Path(save_dir) / Path(name).name
 
         if save_path.is_file():
-            logger.info(f"Blob with {save_path} exists!")
+            logger.info(f"Blob {save_path} exists!")
             return
         else:
             return save_path
@@ -170,7 +177,7 @@ class Sentinel2Downloader:
         return results
 
     def _setup(self, product_type, tiles, start_date, end_date, bands,
-               constraints, output_dir, cores, verbose):
+               constraints, output_dir, cores):
         if product_type not in PRODUCT_TYPE:
             raise ValueError(f"Provide proper Sentinel2 type: {PRODUCT_TYPE}")
         self.product_type = product_type
@@ -200,35 +207,31 @@ class Sentinel2Downloader:
         self.constraints = constraints
         self.output_dir = output_dir
         self.cores = cores
-        if verbose:
-            logging.basicConfig(level=logging.INFO)
 
     def download(self,
                  product_type,
-                 tiles: set,
+                 tiles: list,
                  *,
                  start_date: Optional[str] = None,
                  end_date: Optional[str] = None,
                  bands: set = BANDS,
                  constraints: dict = CONSTRAINTS,
-                 output_dir: str = '../sentinel2_imagery',
-                 cores: int = 5,
-                 verbose: bool = False) -> Optional[List]:
+                 output_dir: str = '../sentinel2imagery',
+                 cores: int = 5) -> Optional[List]:
         """
         :param product_type: str, "L2A" or "L1C" Sentinel2 products
-        :param tiles: set, tiles to load (ex: {36UYA, 36UYB})
+        :param tiles: list, tiles to load (ex: {36UYA, 36UYB})
         :param start_date: str, format: 2020-01-01, start date to search and load blobs, default: (today - 2 days)
         :param end_date:  str, format: 2020-01-02, end date to search and load blobs, default: today
         :param bands: set, selected bands for loading, default: {'TCI', 'B01', 'B02', 'B03', 'B04', 'B05', 'B06',
                                                                 'B07', 'B08', 'B8A', 'B09', 'B10', 'B11', 'B12', }
         :param constraints: dict, constraints that blobs must match, default: TODO: SPECIFY
-        :param output_dir: str, path to loading dir, default: '../sentinel2_imagery'
+        :param output_dir: str, path to loading dir, default: '../sentinel2imagery'
         :param cores: int, number of cores, default: 5
-        :param verbose: bool, flag, print logging information, default: False
         :return: [tuple, None], tuples (flag, blob_name), if flag=True, blob is loaded, or None if nothing to load
         """
 
-        self._setup(product_type, tiles, start_date, end_date, bands, constraints, output_dir, cores, verbose)
+        self._setup(product_type, tiles, start_date, end_date, bands, constraints, output_dir, cores)
 
         logger.info("Start downloading...")
         start_time = time.time()
