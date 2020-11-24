@@ -9,7 +9,7 @@ setup(
     name='sentinel2tools',
     version=__version__,
     author=__author__,
-    packages=find_packages(include=['sentinel2tools', ]),
+    packages=find_packages('sentinel2download'),
     setup_requires=install_requires,
     install_requires=install_requires,
     package_data={'sentinel2download': ['grid/*', '../requirements-dev.txt']},
