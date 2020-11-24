@@ -131,7 +131,7 @@ class Sentinel2Downloader:
                     blobs_to_load.add(blob)
         return blobs_to_load
 
-    def blobs_to_load(self, tile_prefix):
+    def _blobs_to_load(self, tile_prefix):
         blobs_to_load = set()
         file_suffixes = self._file_suffixes()
         # filter store items by base prefix, ex: tiles/36/U/YA/
@@ -150,11 +150,11 @@ class Sentinel2Downloader:
 
         return blobs_to_load
 
-    def download_blob(self, blob):
+    def _download_blob(self, blob):
         save_path = self.get_save_path(blob)
         # check if file exists
         if not save_path:
-            return False, blob.name
+            return True, blob.name
         Path.mkdir(save_path.parent, parents=True, exist_ok=True)
 
         with open(save_path, 'wb') as file:
@@ -162,10 +162,10 @@ class Sentinel2Downloader:
         logger.info(f"Loaded {blob.name}")
         return True, blob.name
 
-    def download_blobs_mult(self, blobs):
+    def _download_blobs_mult(self, blobs):
         results = list()
         with ThreadPoolExecutor(max_workers=self.cores) as executor:
-            future_to_blob = {executor.submit(self.download_blob, blob): blob.name for blob in blobs}
+            future_to_blob = {executor.submit(self._download_blob, blob): blob.name for blob in blobs}
             for future in as_completed(future_to_blob):
                 blob_name = future_to_blob[future]
                 try:
@@ -228,7 +228,8 @@ class Sentinel2Downloader:
         :param constraints: dict, constraints that blobs must match, default: TODO: SPECIFY
         :param output_dir: str, path to loading dir, default: '../sentinel2imagery'
         :param cores: int, number of cores, default: 5
-        :return: [tuple, None], tuples (flag, blob_name), if flag=True, blob is loaded, or None if nothing to load
+        :return: [tuple, None], tuples (flag, blob_name), if flag=True, blob is loaded or exists,
+        or None if nothing to load
         """
 
         self._setup(product_type, tiles, start_date, end_date, bands, constraints, output_dir, cores)
@@ -240,8 +241,8 @@ class Sentinel2Downloader:
             logger.info(f"Loading blobs for tile {tile}...")
 
             tile_prefix = self._tile_prefix(tile)
-            blobs_to_load = self.blobs_to_load(tile_prefix)
-            result = self.download_blobs_mult(blobs_to_load)
+            blobs_to_load = self._blobs_to_load(tile_prefix)
+            result = self._download_blobs_mult(blobs_to_load)
             results.extend(result)
 
             logger.info(f"Finished loading blobs for tile {tile}")
