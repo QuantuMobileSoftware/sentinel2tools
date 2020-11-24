@@ -1,5 +1,7 @@
-from sentinel2download import __version__, __author__
 from setuptools import setup, find_packages
+
+__version__ = '1.0'
+__author__ = 'Quantumobile'
 
 install_requires = ['google-cloud-storage==1.32.0',
                     'geopandas==0.8.1',
