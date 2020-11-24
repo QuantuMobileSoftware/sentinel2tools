@@ -17,7 +17,7 @@ if __name__ == '__main__':
     verbose = True
     CONSTRAINTS = {'NODATA_PIXEL_PERCENTAGE': 100.0, 'CLOUDY_PIXEL_PERCENTAGE': 100.0, }
 
-    aoi_path = "./input/Kharkiv_region.geojson"
+    aoi_path = "../test_geojson/Kharkiv_region.geojson"
     # aoi_path = "./input/ohio_AOI.geojson"
     # grid_path = "grid/sentinel2grid.shp"
 
