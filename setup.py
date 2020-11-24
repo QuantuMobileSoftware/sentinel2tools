@@ -16,6 +16,6 @@ setup(
                     'Rtree==0.9.4', ],
     # package_data={'sentinel2download': ['grid/*', '../requirements-dev.txt']},
     python_requires='>=3.7',
-    dependency_links=['git+ssh://git@github.com/QuantumobileSoftware/sentinel2tools.git@13723_vy_load_sentinel_setup']
+    # dependency_links=['git+ssh://git@github.com/QuantumobileSoftware/sentinel2tools.git@13723_vy_load_sentinel_setup']
 
 )
