@@ -1,7 +1,0 @@
-# geopandas==0.8.1
-# -e git+git://github.com/geopandas/geopandas.git
-
-google-cloud-storage==1.32.0
-geopandas==0.8.1
-Rtree==0.9.4
-

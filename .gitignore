@@ -1,11 +1,8 @@
-# Byte-compiled / optimized / DLL files
+# Python cache
 __pycache__
 
 # Jupyter Notebook
 .ipynb_checkpoints
-
-# pyenv
-.python-version
 
 # Environments
 venv/
@@ -15,5 +12,4 @@ venv/
 *.secure
 sentinel2imagery
 jupyter
-data
 docker-compose.yml
