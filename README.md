@@ -10,7 +10,7 @@
 `apt-get install -y gcc libspatialindex-dev python3-dev`
 2. Add to requirements.txt in the project or use `pip install`:<br>
 `git+ssh://git@github.com/QuantumobileSoftware/sentinel2tools.git@<branch-name>`, where `branch-name` - 
-`main, master or actual one`.
+`main or actual one`.
 
 ### Usage
 
