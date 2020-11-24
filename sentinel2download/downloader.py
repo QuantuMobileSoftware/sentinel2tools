@@ -19,7 +19,7 @@ PRODUCT_TYPE = namedtuple('type', 'L2A L1C')('L2A', 'L1C')
 BANDS = frozenset(('TCI', 'B01', 'B02', 'B03', 'B04', 'B05', 'B06',
                    'B07', 'B08', 'B8A', 'B09', 'B10', 'B11', 'B12',))
 
-CONSTRAINTS = MappingProxyType({'CLOUDY_PIXEL_PERCENTAGE': 100.0, })
+CONSTRAINTS = MappingProxyType({'CLOUDY_PIXEL_PERCENTAGE': 100.0, 'NODATA_PIXEL_PERCENTAGE': 100.0, })
 
 
 class Sentinel2Downloader:
@@ -136,8 +136,6 @@ class Sentinel2Downloader:
         file_suffixes = self._file_suffixes()
         # filter store items by base prefix, ex: tiles/36/U/YA/
         safe_prefixes = self._get_safe_prefixes(tile_prefix)
-        print("SAFE")
-        print(len(safe_prefixes))
         # filter .SAFE paths by date range
         filtered_prefixes = self._filter_by_dates(safe_prefixes)
         for prefix in filtered_prefixes:
@@ -216,7 +214,7 @@ class Sentinel2Downloader:
                  end_date: Optional[str] = None,
                  bands: set = BANDS,
                  constraints: dict = CONSTRAINTS,
-                 output_dir: str = '../sentinel2imagery',
+                 output_dir: str = './sentinel2imagery',
                  cores: int = 5) -> Optional[List]:
         """
         :param product_type: str, "L2A" or "L1C" Sentinel2 products
@@ -225,8 +223,9 @@ class Sentinel2Downloader:
         :param end_date:  str, format: 2020-01-02, end date to search and load blobs, default: today
         :param bands: set, selected bands for loading, default: {'TCI', 'B01', 'B02', 'B03', 'B04', 'B05', 'B06',
                                                                 'B07', 'B08', 'B8A', 'B09', 'B10', 'B11', 'B12', }
-        :param constraints: dict, constraints that blobs must match, default: TODO: SPECIFY
-        :param output_dir: str, path to loading dir, default: '../sentinel2imagery'
+        :param constraints: dict, constraints that blobs must match, default: {'CLOUDY_PIXEL_PERCENTAGE': 100.0, },
+        for L2A product_type, 'NODATA_PIXEL_PERCENTAGE' can be added
+        :param output_dir: str, path to loading dir, default: './sentinel2imagery'
         :param cores: int, number of cores, default: 5
         :return: [tuple, None], tuples (flag, blob_name), if flag=True, blob is loaded or exists,
         or None if nothing to load
