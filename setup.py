@@ -11,6 +11,7 @@ setup(
     author=__author__,
     packages=find_packages(include=['sentinel2download', ]),
     setup_requires=install_requires,
+    install_requires=install_requires,
     package_data={'sentinel2download': ['grid/*', '../requirements-dev.txt']},
     python_requires='>=3.7',
 
