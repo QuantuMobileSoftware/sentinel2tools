@@ -95,6 +95,8 @@ class Sentinel2Downloader:
                 xml_node = xml_dom.getElementsByTagName(constraint)
                 if xml_node:
                     parsed_value = float(xml_node[0].firstChild.data)
+                    logger.info(f"Blob: {metadata_blob.name}, "
+                                f"constraint {constraint}:{value}, parsed value: {parsed_value}")
                     if parsed_value > value:
                         return False
                 else:
@@ -191,10 +193,11 @@ class Sentinel2Downloader:
         if start_date:
             start_date = datetime.strptime(start_date, format)
         else:
-            delta = 2
+            delta = 10
             start_date = end_date - timedelta(days=delta)
 
         self.date_range = self._date_range(start_date, end_date)
+        logger.info(f"Search date range from {start_date} to {end_date}")
 
         bands = set(bands).intersection(BANDS)
         if not bands:
@@ -219,7 +222,7 @@ class Sentinel2Downloader:
         """
         :param product_type: str, "L2A" or "L1C" Sentinel2 products
         :param tiles: list, tiles to load (ex: {36UYA, 36UYB})
-        :param start_date: str, format: 2020-01-01, start date to search and load blobs, default: (today - 2 days)
+        :param start_date: str, format: 2020-01-01, start date to search and load blobs, default: (today - 10 days)
         :param end_date:  str, format: 2020-01-02, end date to search and load blobs, default: today
         :param bands: set, selected bands for loading, default: {'TCI', 'B01', 'B02', 'B03', 'B04', 'B05', 'B06',
                                                                 'B07', 'B08', 'B8A', 'B09', 'B10', 'B11', 'B12', }
