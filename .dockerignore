@@ -5,5 +5,5 @@ __pycache__
 venv/
 .idea
 
-*.secret/sentinel2_google_api_key.json
 sentinel2imagery
+docker-compose.yml

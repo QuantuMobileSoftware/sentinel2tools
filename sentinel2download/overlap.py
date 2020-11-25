@@ -1,3 +1,5 @@
+import os
+import os.path
 import geopandas as gp
 import logging
 from shapely.geometry import box
@@ -5,9 +7,11 @@ from typing import Optional, List
 
 logger = logging.getLogger(__name__)
 
+GRID_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "./grid"))
+
 
 class Sentinel2Overlap:
-    def __init__(self, aoi_path: str, *, grid_path: str = "./grid/sentinel2grid.shp", verbose: bool = False):
+    def __init__(self, aoi_path: str, *, grid_path: str = os.path.join(GRID_DIR, "sentinel2grid.shp"), verbose: bool = False):
         self.crs = "epsg:4326"
 
         if verbose:

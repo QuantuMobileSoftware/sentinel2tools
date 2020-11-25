@@ -115,7 +115,9 @@ class Sentinel2Downloader:
         save_path = Path(self.output_dir) / Path(save_dir) / Path(name).name
 
         if save_path.is_file():
-            logger.info(f"Blob {save_path} exists!")
+            logger.info(f"Blob {save_path} exists, skipping download")
+            # update mtime thus tile is not evicted from cache
+            save_path.touch()
             return
         else:
             return save_path
