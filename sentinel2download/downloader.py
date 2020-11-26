@@ -33,9 +33,9 @@ class Sentinel2Downloader:
         :param verbose: bool, flag, print logging information, default: False
         """
         if verbose:
-            logging.basicConfig(level=logging.INFO)
+            logger.setLevel(logging.INFO)
         else:
-            logging.basicConfig(level=logging.CRITICAL)
+            logger.setLevel(level=logging.CRITICAL)
 
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = api_key
         self.client = storage.Client()
