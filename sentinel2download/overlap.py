@@ -1,11 +1,11 @@
 import os
-import os.path
 import geopandas as gp
 import logging
 from shapely.geometry import box
 from typing import Optional, List
 
 logger = logging.getLogger(__name__)
+logging.basicConfig()
 
 GRID_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "./grid"))
 
@@ -15,7 +15,9 @@ class Sentinel2Overlap:
         self.crs = "epsg:4326"
 
         if verbose:
-            logging.basicConfig(level=logging.INFO)
+            logger.setLevel(logging.INFO)
+        else:
+            logger.setLevel(logging.CRITICAL)
         aoi = gp.read_file(aoi_path)
 
         if len(aoi) > 1 or aoi.geometry[0].geom_type != 'Polygon':

@@ -13,6 +13,7 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 logger = logging.getLogger(__name__)
+logging.basicConfig()
 
 PRODUCT_TYPE = namedtuple('type', 'L2A L1C')('L2A', 'L1C')
 
@@ -33,7 +34,9 @@ class Sentinel2Downloader:
         :param verbose: bool, flag, print logging information, default: False
         """
         if verbose:
-            logging.basicConfig(level=logging.INFO)
+            logger.setLevel(logging.INFO)
+        else:
+            logger.setLevel(logging.CRITICAL)
 
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = api_key
         self.client = storage.Client()

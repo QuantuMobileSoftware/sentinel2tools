@@ -8,6 +8,8 @@
 ### Installation
 1. Install dependencies, see Dockerfile
 2. Add to requirements.txt in the project or use `pip install`:<br>
+`git+https://github.com/QuantuMobileSoftware/sentinel2tools.git@<commit-ref>`
+<br> or
 `git+ssh://git@github.com/QuantumobileSoftware/sentinel2tools.git@<commit-ref>`
 
 ### Usage
