@@ -114,13 +114,7 @@ class Sentinel2Downloader:
         save_dir = search.group(1)
         save_path = Path(self.output_dir) / Path(save_dir) / Path(name).name
 
-        if save_path.is_file():
-            logger.info(f"Blob {save_path} exists, skipping download")
-            # update mtime thus tile is not evicted from cache
-            save_path.touch()
-            return
-        else:
-            return save_path
+        return save_path
 
     def _filter_by_suffix(self, blobs, file_suffixes):
         blobs_to_load = set()
@@ -155,14 +149,16 @@ class Sentinel2Downloader:
     def _download_blob(self, blob):
         save_path = self.get_save_path(blob)
         # check if file exists
-        if not save_path:
-            return True, blob.name
+        if save_path.is_file():
+            logger.info(f"Blob {save_path} exists, skipping download")
+            return str(save_path), blob.name
+
         Path.mkdir(save_path.parent, parents=True, exist_ok=True)
 
         with open(save_path, 'wb') as file:
             blob.download_to_file(file)
         logger.info(f"Loaded {blob.name}")
-        return True, blob.name
+        return str(save_path), blob.name
 
     def _download_blobs_mult(self, blobs):
         results = list()
@@ -175,7 +171,7 @@ class Sentinel2Downloader:
                     results.append(result)
                 except Exception as ex:
                     logger.info(f"Error while loading {blob_name}: {str(ex)}")
-                    results.append((False, blob_name))
+                    results.append((None, blob_name))
         return results
 
     def _setup(self, product_type, tiles, start_date, end_date, bands,
@@ -232,7 +228,7 @@ class Sentinel2Downloader:
         for L2A product_type, 'NODATA_PIXEL_PERCENTAGE' can be added
         :param output_dir: str, path to loading dir, default: './sentinel2imagery'
         :param cores: int, number of cores, default: 5
-        :return: [tuple, None], tuples (flag, blob_name), if flag=True, blob is loaded or exists,
+        :return: [tuple, None], tuples (save_path, blob_name), if save_path is None, the blob not loaded
         or None if nothing to load
         """
 
@@ -252,6 +248,6 @@ class Sentinel2Downloader:
             logger.info(f"Finished loading blobs for tile {tile}")
 
         logger.info(f"Loaded: {len([r[0] for r in results if r[0]])} blobs")
-        logger.info(f"\nFinished loading at {time.strftime('%H:%M:%S', time.gmtime(time.time() - start_time))}")
+        logger.info(f"Finished loading at {time.strftime('%H:%M:%S', time.gmtime(time.time() - start_time))}")
 
         return results
