@@ -16,6 +16,8 @@ class Sentinel2Overlap:
 
         if verbose:
             logging.basicConfig(level=logging.INFO)
+        else:
+            logging.basicConfig(level=logging.CRITICAL)
         aoi = gp.read_file(aoi_path)
 
         if len(aoi) > 1 or aoi.geometry[0].geom_type != 'Polygon':
