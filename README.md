@@ -14,6 +14,9 @@
 
 ### Usage
 
-See example.py
+See `examples/download.py` on how to download Sentinel-2 images. 
+For more details see docs in `Sentinel2Downloader.download()` method
 
-##### For more parameters see docs in download() method
+See `examples/conversion.py` on how to convert raw Sentinel-2 L1C products into L2A products. 
+In order to convert Sentinel-2 products need to be fully downloaded (.SAFE folder), 
+to achieve it use _**full_download**_ option of `Sentinel2Downloader`.
