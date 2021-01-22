@@ -3,7 +3,6 @@ from sentinel2download.overlap import Sentinel2Overlap
 from sentinel2preprocessing.l1c_to_l2a_conversion import Sentinel2Converter
 
 if __name__ == '__main__':
-
     verbose = True
     aoi_path = "./test_geojson/osnova_lake.geojson"
 
@@ -35,12 +34,9 @@ if __name__ == '__main__':
                              constraints=CONSTRAINTS,
                              full_download=True)
 
-    print(f"Load information")
-    for item in loaded:
-        print(item)
-
-    print("Execution ended")
     converter = Sentinel2Converter(verbose=verbose)
 
     converted_products = converter.convert_all_products(download_dir, conversion_dir)
     print(f"Total number of converted products: {len(converted_products)}")
+
+    print("Execution ended")
