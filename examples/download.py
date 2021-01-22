@@ -1,5 +1,5 @@
-from sentinel2download.downloader import Sentinel2Downloader
-from sentinel2download.overlap import Sentinel2Overlap
+from download.downloader import Sentinel2Downloader
+from download.overlap import Sentinel2Overlap
 
 if __name__ == '__main__':
     verbose = True
@@ -7,7 +7,6 @@ if __name__ == '__main__':
 
     overlap = Sentinel2Overlap(aoi_path, verbose=verbose)
     tiles = overlap.overlap()
-    # tiles = tiles[:1]
 
     print(f"Overlapped tiles: {tiles}")
 
@@ -30,8 +29,8 @@ if __name__ == '__main__':
                              output_dir=output_dir,
                              cores=cores,
                              bands=BANDS,
-                             constraints=CONSTRAINTS)
-
+                             constraints=CONSTRAINTS,
+                             full_download=True)
     print(f"Load information")
     for item in loaded:
         print(item)
