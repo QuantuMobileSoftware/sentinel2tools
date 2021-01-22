@@ -1,7 +1,9 @@
 from sentinel2download.downloader import Sentinel2Downloader
 from sentinel2download.overlap import Sentinel2Overlap
+from sentinel2preprocessing.l1c_to_l2a_conversion import Sentinel2Converter
 
 if __name__ == '__main__':
+
     verbose = True
     aoi_path = "./test_geojson/osnova_lake.geojson"
 
@@ -14,10 +16,11 @@ if __name__ == '__main__':
 
     loader = Sentinel2Downloader(api_key, verbose=verbose)
 
-    product_type = 'L2A'  # or L1C
-    start_date = "2020-10-01"
-    end_date = "2020-10-20"
-    output_dir = './sentinel2imagery'
+    product_type = 'L1C'
+    start_date = "2018-05-01"
+    end_date = "2018-05-05"
+    download_dir = './sentinel2imagery/l1c_products'
+    conversion_dir = './sentinel2imagery/l2a_products'
     cores = 3
     BANDS = {'TCI', 'B04', }
     CONSTRAINTS = {'NODATA_PIXEL_PERCENTAGE': 15.0, 'CLOUDY_PIXEL_PERCENTAGE': 10.0, }
@@ -26,13 +29,18 @@ if __name__ == '__main__':
                              tiles,
                              start_date=start_date,
                              end_date=end_date,
-                             output_dir=output_dir,
+                             output_dir=download_dir,
                              cores=cores,
                              bands=BANDS,
-                             constraints=CONSTRAINTS)
+                             constraints=CONSTRAINTS,
+                             full_download=True)
 
     print(f"Load information")
     for item in loaded:
         print(item)
 
     print("Execution ended")
+    converter = Sentinel2Converter(verbose=verbose)
+
+    converted_products = converter.convert_all_products(download_dir, conversion_dir)
+    print(f"Total number of converted products: {len(converted_products)}")
