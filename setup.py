@@ -11,9 +11,10 @@ setup(
     name='sentinel2tools',
     version=__version__,
     author=__author__,
+    description="Repository for downloading, processing Sentinel-2 satellite images",
+    url="https://github.com/QuantuMobileSoftware/sentinel2tools/",
     packages=find_packages(),
     install_requires=install_requires,
     package_data={'sentinel2download': ['grid/*', ]},
     python_requires='>=3.7',
-
 )
