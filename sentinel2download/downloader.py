@@ -18,7 +18,7 @@ logging.basicConfig()
 PRODUCT_TYPE = namedtuple('type', 'L2A L1C')('L2A', 'L1C')
 
 BANDS = frozenset(('TCI', 'B01', 'B02', 'B03', 'B04', 'B05', 'B06',
-                   'B07', 'B08', 'B8A', 'B09', 'B10', 'B11', 'B12',))
+                   'B07', 'B08', 'B8A', 'B09', 'B10', 'B11', 'B12', 'CLD'))
 
 CONSTRAINTS = MappingProxyType({'CLOUDY_PIXEL_PERCENTAGE': 100.0, 'NODATA_PIXEL_PERCENTAGE': 100.0, })
 
@@ -88,6 +88,8 @@ class Sentinel2Downloader:
                     suffix = f"{band}_10m.jp2"
                 elif band in ('B05', 'B06', 'B07', 'B8A', 'B11', 'B12'):
                     suffix = f"{band}_20m.jp2"
+                elif band == 'CLD':
+                    suffix = "MSK_CLDPRB_20m.jp2"
                 else:
                     suffix = f"{band}_60m.jp2"
                 file_suffixes.append(suffix)
