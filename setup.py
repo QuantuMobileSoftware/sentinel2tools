@@ -1,4 +1,5 @@
 from setuptools import setup, find_packages
+import subprocess
 
 __version__ = '1.1'
 __author__ = 'Quantumobile'
@@ -17,4 +18,9 @@ setup(
     install_requires=install_requires,
     package_data={'sentinel2download': ['grid/*', ]},
     python_requires='>=3.7',
+    scripts=[
+        'scripts/sen2cor_install.sh'
+    ]
 )
+
+subprocess.call("scripts/sen2cor_install.sh")
