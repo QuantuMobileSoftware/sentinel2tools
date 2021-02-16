@@ -11,6 +11,8 @@
 `git+https://github.com/QuantuMobileSoftware/sentinel2tools.git@<commit-ref>`
 <br> or
 `git+ssh://git@github.com/QuantumobileSoftware/sentinel2tools.git@<commit-ref>`
+3. If the only dependency that you didn't have installed is `Sen2Cor`, then you can use `sen2cor_install.sh` script. 
+It is added as a part of python package, so you can simply run sen2cor_install.sh - Sen2Cor will be installed in your home directory
 
 ### Usage
 
