@@ -25,10 +25,6 @@ CONSTRAINTS = MappingProxyType({'CLOUDY_PIXEL_PERCENTAGE': 100.0, 'NODATA_PIXEL_
 FOLDER_SUFFIX = "_$folder$"
 
 
-def is_dir(blob):
-    return blob.name.endswith(FOLDER_SUFFIX)
-
-
 class Sentinel2Downloader:
     """
     Class for loading Sentinel2 L1C or L2A images
@@ -66,6 +62,10 @@ class Sentinel2Downloader:
         if self.product_type == PRODUCT_TYPE.L2A:
             prefix = "L2/" + prefix
         return prefix
+
+    @staticmethod
+    def is_dir(blob):
+        return blob.name.endswith(FOLDER_SUFFIX)
 
     @staticmethod
     def _date_range(start_date, end_date):
