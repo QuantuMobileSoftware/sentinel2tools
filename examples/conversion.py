@@ -1,6 +1,6 @@
 from sentinel2download.downloader import Sentinel2Downloader
 from sentinel2download.overlap import Sentinel2Overlap
-from sentinel2preprocessing.l1c_to_l2a_conversion import Sentinel2Converter
+from sentinel2preprocessing.conversion import Sentinel2Converter
 
 if __name__ == '__main__':
     verbose = True
