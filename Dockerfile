@@ -21,4 +21,4 @@ RUN pip install -r requirements.txt
 
 COPY . /code/
 
-CMD ["python3", "examples/conversion.py"]
+CMD ["python3", "examples/download.py"]
