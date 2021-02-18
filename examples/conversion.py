@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
     converter = Sentinel2Converter(verbose=verbose)
 
-    converted_products = converter.convert_all_products(download_dir, conversion_dir)
+    converted_products = converter.convert(download_dir, conversion_dir)
     print(f"Total number of converted products: {len(converted_products)}")
 
     print("Execution ended")

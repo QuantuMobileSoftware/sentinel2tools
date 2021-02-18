@@ -22,7 +22,8 @@ class Sentinel2Converter:
         else:
             logger.setLevel(logging.CRITICAL)
 
-    def convert_l1c_to_l2a(self, input_tile_path, output_dir_path) -> bool:
+    @staticmethod
+    def __convert_l1c_to_l2a(input_tile_path, output_dir_path) -> bool:
         if not os.path.exists(input_tile_path):
             logger.error(f"Check that your input tile directory exists: {input_tile_path}")
             return False
@@ -42,7 +43,7 @@ class Sentinel2Converter:
                          f"to L2A product: {process.stderr}")
         return success
 
-    def convert_all_products(self, input_dir_path, output_dir_path) -> List[str]:
+    def convert(self, input_dir_path, output_dir_path) -> List[str]:
         """
         :param input_dir_path: str, path to a directory with downloaded Sentinel-2 L1C products
         :param output_dir_path: list, tiles to load (ex: {36UYA, 36UYB})
@@ -56,7 +57,7 @@ class Sentinel2Converter:
         results = []
         for input_tile in os.listdir(input_dir_path):
             input_tile_path = os.path.join(input_dir_path, input_tile)
-            status = self.convert_l1c_to_l2a(input_tile_path, output_dir_path)
+            status = self.__convert_l1c_to_l2a(input_tile_path, output_dir_path)
             if status:
                 results.append(input_tile_path)
         logger.info(f"Finished converting at {time.strftime('%H:%M:%S', time.gmtime(time.time() - start_time))}")
