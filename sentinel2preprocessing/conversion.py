@@ -55,10 +55,10 @@ class Sentinel2Converter:
             logger.info(f"Check that your input directory exists: {input_dir_path}")
         os.makedirs(output_dir_path, exist_ok=True)
         results = []
-        for input_tile in os.listdir(input_dir_path):
-            input_tile_path = os.path.join(input_dir_path, input_tile)
-            status = self.__convert_l1c_to_l2a(input_tile_path, output_dir_path)
+        for tile_dir in os.listdir(input_dir_path):
+            tile_dir_path = os.path.join(input_dir_path, tile_dir)
+            status = self.__convert_l1c_to_l2a(tile_dir_path, output_dir_path)
             if status:
-                results.append(input_tile_path)
+                results.append(tile_dir_path)
         logger.info(f"Finished converting at {time.strftime('%H:%M:%S', time.gmtime(time.time() - start_time))}")
         return results
