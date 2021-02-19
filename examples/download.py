@@ -7,7 +7,6 @@ if __name__ == '__main__':
 
     overlap = Sentinel2Overlap(aoi_path, verbose=verbose)
     tiles = overlap.overlap()
-    # tiles = tiles[:1]
 
     print(f"Overlapped tiles: {tiles}")
 

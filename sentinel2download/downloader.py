@@ -6,7 +6,7 @@ import time
 from datetime import datetime, timedelta
 from collections import namedtuple
 from types import MappingProxyType
-from typing import Optional, List
+from typing import Optional, List, Tuple
 from xml.dom import minidom
 from google.cloud import storage
 from pathlib import Path
@@ -18,9 +18,11 @@ logging.basicConfig()
 PRODUCT_TYPE = namedtuple('type', 'L2A L1C')('L2A', 'L1C')
 
 BANDS = frozenset(('TCI', 'B01', 'B02', 'B03', 'B04', 'B05', 'B06',
-                   'B07', 'B08', 'B8A', 'B09', 'B10', 'B11', 'B12',))
+                   'B07', 'B08', 'B8A', 'B09', 'B10', 'B11', 'B12', 'CLD'))
 
 CONSTRAINTS = MappingProxyType({'CLOUDY_PIXEL_PERCENTAGE': 100.0, 'NODATA_PIXEL_PERCENTAGE': 100.0, })
+
+FOLDER_SUFFIX = "_$folder$"
 
 
 class Sentinel2Downloader:
@@ -43,7 +45,7 @@ class Sentinel2Downloader:
         self.bucket = self.client.get_bucket('gcp-public-data-sentinel-2')
         self.metadata_suffix = 'MTD_TL.xml'
 
-    def _filter_by_dates(self, safe_prefixes):
+    def _filter_by_dates(self, safe_prefixes) -> List[str]:
         # acquired date: 20200812T113607
         date_pattern = r"_(\d+)T\d+_"
         filtered = list()
@@ -60,6 +62,10 @@ class Sentinel2Downloader:
         if self.product_type == PRODUCT_TYPE.L2A:
             prefix = "L2/" + prefix
         return prefix
+
+    @staticmethod
+    def is_dir(blob):
+        return blob.name.endswith(FOLDER_SUFFIX)
 
     @staticmethod
     def _date_range(start_date, end_date):
@@ -82,6 +88,8 @@ class Sentinel2Downloader:
                     suffix = f"{band}_10m.jp2"
                 elif band in ('B05', 'B06', 'B07', 'B8A', 'B11', 'B12'):
                     suffix = f"{band}_20m.jp2"
+                elif band == 'CLD':
+                    suffix = "MSK_CLDPRB_20m.jp2"
                 else:
                     suffix = f"{band}_60m.jp2"
                 file_suffixes.append(suffix)
@@ -111,12 +119,20 @@ class Sentinel2Downloader:
             return True
 
     def get_save_path(self, blob):
-        name = blob.name
-        # extract dirname, for ex: S2A_MSIL2A_20200703T084601_N0214_R107_T36UYA_20200703T113817
-        search = re.search(r"/([^/]+)\.SAFE", name)
-        save_dir = search.group(1)
-        save_path = Path(self.output_dir) / Path(save_dir) / Path(name).name
-
+        if self.full_download:
+            name = blob.name
+            # extract full path, for ex: S2A_MSIL1C_20201001T084801_N0209_R107_T36UYA_20201001T094101.SAFE/rep_info_$folder$
+            search = re.search(r"([^/]+\.SAFE.*)", name)
+            file_path = search.group(1)
+            if is_dir(blob):
+                file_path = file_path.replace(FOLDER_SUFFIX, "")
+            save_path = Path(self.output_dir) / Path(file_path)
+        else:
+            name = blob.name
+            # extract dirname, for ex: S2A_MSIL2A_20200703T084601_N0214_R107_T36UYA_20200703T113817
+            search = re.search(r"/([^/]+)\.SAFE", name)
+            save_dir = search.group(1)
+            save_path = Path(self.output_dir) / Path(save_dir) / Path(name).name
         return save_path
 
     def _filter_by_suffix(self, blobs, file_suffixes):
@@ -132,14 +148,10 @@ class Sentinel2Downloader:
                     blobs_to_load.add(blob)
         return blobs_to_load
 
-    def _blobs_to_load(self, tile_prefix):
+    def _get_blobs_to_load(self, prefixes):
         blobs_to_load = set()
         file_suffixes = self._file_suffixes()
-        # filter store items by base prefix, ex: tiles/36/U/YA/
-        safe_prefixes = self._get_safe_prefixes(tile_prefix)
-        # filter .SAFE paths by date range
-        filtered_prefixes = self._filter_by_dates(safe_prefixes)
-        for prefix in filtered_prefixes:
+        for prefix in prefixes:
             granule_prefix = prefix + "GRANULE/"
             blobs = list(self.client.list_blobs(self.bucket, prefix=granule_prefix))
 
@@ -149,13 +161,23 @@ class Sentinel2Downloader:
 
         return blobs_to_load
 
-    def _download_blob(self, blob):
-        save_path = self.get_save_path(blob)
+    def _get_filtered_prefixes(self, tile_prefix) -> List[str]:
+        # filter store items by base prefix, ex: tiles/36/U/YA/
+        safe_prefixes = self._get_safe_prefixes(tile_prefix)
+        # filter .SAFE paths by date range
+        filtered_prefixes = self._filter_by_dates(safe_prefixes)
+        return filtered_prefixes
+
+    @staticmethod
+    def _download_blob(blob, save_path) -> Tuple[str, str]:
         # check if file exists
         if save_path.is_file():
             logger.info(f"Blob {save_path} exists, skipping download")
             # update mtime thus tile is not evicted from cache
             save_path.touch()
+            return str(save_path), blob.name
+        if is_dir(blob):
+            Path.mkdir(save_path, parents=True, exist_ok=True)
             return str(save_path), blob.name
 
         Path.mkdir(save_path.parent, parents=True, exist_ok=True)
@@ -165,10 +187,11 @@ class Sentinel2Downloader:
         logger.info(f"Loaded {blob.name}")
         return str(save_path), blob.name
 
-    def _download_blobs_mult(self, blobs):
+    def _download_blobs_mult(self, blobs) -> List[Tuple[str, str]]:
         results = list()
         with ThreadPoolExecutor(max_workers=self.cores) as executor:
-            future_to_blob = {executor.submit(self._download_blob, blob): blob.name for blob in blobs}
+            future_to_blob = {executor.submit(self._download_blob, blob, self.get_save_path(blob)): blob.name
+                              for blob in blobs}
             for future in as_completed(future_to_blob):
                 blob_name = future_to_blob[future]
                 try:
@@ -180,7 +203,7 @@ class Sentinel2Downloader:
         return results
 
     def _setup(self, product_type, tiles, start_date, end_date, bands,
-               constraints, output_dir, cores):
+               constraints, output_dir, cores, full_download):
         if product_type not in PRODUCT_TYPE:
             raise ValueError(f"Provide proper Sentinel2 type: {PRODUCT_TYPE}")
         self.product_type = product_type
@@ -211,9 +234,10 @@ class Sentinel2Downloader:
         self.constraints = constraints
         self.output_dir = output_dir
         self.cores = cores
+        self.full_download = full_download
 
     def download(self,
-                 product_type,
+                 product_type: str,
                  tiles: list,
                  *,
                  start_date: Optional[str] = None,
@@ -221,7 +245,8 @@ class Sentinel2Downloader:
                  bands: set = BANDS,
                  constraints: dict = CONSTRAINTS,
                  output_dir: str = './sentinel2imagery',
-                 cores: int = 5) -> Optional[List]:
+                 cores: int = 5,
+                 full_download: bool = False) -> Optional[List]:
         """
         :param product_type: str, "L2A" or "L1C" Sentinel2 products
         :param tiles: list, tiles to load (ex: {36UYA, 36UYB})
@@ -233,11 +258,12 @@ class Sentinel2Downloader:
         for L2A product_type, 'NODATA_PIXEL_PERCENTAGE' can be added
         :param output_dir: str, path to loading dir, default: './sentinel2imagery'
         :param cores: int, number of cores, default: 5
+        :param full_download: bool, option for full download of Sentinel-2 .SAFE folder, default: False
         :return: [tuple, None], tuples (save_path, blob_name), if save_path is None, the blob not loaded
         or None if nothing to load
         """
 
-        self._setup(product_type, tiles, start_date, end_date, bands, constraints, output_dir, cores)
+        self._setup(product_type, tiles, start_date, end_date, bands, constraints, output_dir, cores, full_download)
 
         logger.info("Start downloading...")
         start_time = time.time()
@@ -246,10 +272,17 @@ class Sentinel2Downloader:
             logger.info(f"Loading blobs for tile {tile}...")
 
             tile_prefix = self._tile_prefix(tile)
-            blobs_to_load = self._blobs_to_load(tile_prefix)
-            result = self._download_blobs_mult(blobs_to_load)
-            results.extend(result)
-
+            filtered_prefixes = self._get_filtered_prefixes(tile_prefix)
+            if self.full_download:
+                for prefix in filtered_prefixes:
+                    blobs = list(self.client.list_blobs(self.bucket, prefix=prefix))
+                    if blobs:
+                        result = self._download_blobs_mult(blobs)
+                        results.extend(result)
+            else:
+                blobs_to_load = self._get_blobs_to_load(filtered_prefixes)
+                result = self._download_blobs_mult(blobs_to_load)
+                results.extend(result)
             logger.info(f"Finished loading blobs for tile {tile}")
 
         logger.info(f"Loaded: {len([r[0] for r in results if r[0]])} blobs")
