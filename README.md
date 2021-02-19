@@ -21,4 +21,4 @@ For more details see docs in `Sentinel2Downloader.download()` method
 
 See `examples/conversion.py` on how to convert raw Sentinel-2 L1C products into L2A products. 
 In order to convert Sentinel-2 products need to be fully downloaded (.SAFE folder), 
-to achieve it use _**full_download**_ option of `Sentinel2Downloader`.
+to achieve it set _**full_download=True**_ option of `Sentinel2Downloader`.

@@ -23,7 +23,7 @@ class Sentinel2Converter:
             logger.setLevel(logging.CRITICAL)
 
     @staticmethod
-    def __convert_l1c_to_l2a(input_tile_path, output_dir_path) -> bool:
+    def __convert_l1c_to_l2a(input_tile_path, output_dir_path, sen2cor_path) -> bool:
         if not os.path.exists(input_tile_path):
             logger.error(f"Check that your input tile directory exists: {input_tile_path}")
             return False
@@ -31,7 +31,7 @@ class Sentinel2Converter:
         os.makedirs(os.path.join(input_tile_path, "AUX_DATA"), exist_ok=True)
         os.makedirs(os.path.join(input_tile_path, "HTML"), exist_ok=True)
         logger.info(f"Started converting {input_tile_path}")
-        process = subprocess.run(['L2A_Process', f'--output_dir={output_dir_path}', f'{input_tile_path}'],
+        process = subprocess.run([sen2cor_path, f'--output_dir={output_dir_path}', f'{input_tile_path}'],
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE,
                                  universal_newlines=True)
@@ -43,10 +43,11 @@ class Sentinel2Converter:
                          f"to L2A product: {process.stderr}")
         return success
 
-    def convert(self, input_dir_path, output_dir_path) -> List[str]:
+    def convert(self, input_dir_path, output_dir_path, sen2cor_path='L2A_Process') -> List[str]:
         """
         :param input_dir_path: str, path to a directory with downloaded Sentinel-2 L1C products
         :param output_dir_path: list, tiles to load (ex: {36UYA, 36UYB})
+        :param sen2cor_path: str, path to L2A_Process executable
         :return: List[str],
         """
         start_time = time.time()
@@ -57,7 +58,7 @@ class Sentinel2Converter:
         results = []
         for tile_dir in os.listdir(input_dir_path):
             tile_dir_path = os.path.join(input_dir_path, tile_dir)
-            status = self.__convert_l1c_to_l2a(tile_dir_path, output_dir_path)
+            status = self.__convert_l1c_to_l2a(tile_dir_path, output_dir_path, sen2cor_path)
             if status:
                 results.append(tile_dir_path)
         logger.info(f"Finished converting at {time.strftime('%H:%M:%S', time.gmtime(time.time() - start_time))}")
