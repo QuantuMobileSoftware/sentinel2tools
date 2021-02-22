@@ -124,7 +124,7 @@ class Sentinel2Downloader:
             # extract full path, for ex: S2A_MSIL1C_20201001T084801_N0209_R107_T36UYA_20201001T094101.SAFE/rep_info_$folder$
             search = re.search(r"([^/]+\.SAFE.*)", name)
             file_path = search.group(1)
-            if is_dir(blob):
+            if self.is_dir(blob):
                 file_path = file_path.replace(FOLDER_SUFFIX, "")
             save_path = Path(self.output_dir) / Path(file_path)
         else:
@@ -168,15 +168,14 @@ class Sentinel2Downloader:
         filtered_prefixes = self._filter_by_dates(safe_prefixes)
         return filtered_prefixes
 
-    @staticmethod
-    def _download_blob(blob, save_path) -> Tuple[str, str]:
+    def _download_blob(self, blob, save_path) -> Tuple[str, str]:
         # check if file exists
         if save_path.is_file():
             logger.info(f"Blob {save_path} exists, skipping download")
             # update mtime thus tile is not evicted from cache
             save_path.touch()
             return str(save_path), blob.name
-        if is_dir(blob):
+        if self.is_dir(blob):
             Path.mkdir(save_path, parents=True, exist_ok=True)
             return str(save_path), blob.name
 
