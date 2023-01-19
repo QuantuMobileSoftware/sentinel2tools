@@ -120,3 +120,33 @@ class Sentinel2Overlap:
             return 32600 + zone
         else:
             return 32700 + zone
+
+    def overlap_with_geometry(self, *, limit: float = 0.001) -> Optional[gp.GeoDataFrame]:
+        """
+        Find unique tiles that intersects given aoi, area.
+        The same as overlap, but with geometry.
+        :param limit: float, min intersection area in km2
+        :return: GeoDataFrame: Tile names (Name column) and it's geometry in epsg:4326
+        """
+
+        logger.info(f"Start finding overlapping tiles")
+
+        grid, epsg = self._intersect(limit)
+
+        aoi = self.aoi
+        overlap_tiles = list()
+        for row in grid.itertuples():
+            start_area = aoi.geometry[0].area
+            aoi.geometry[0] = aoi.geometry[0].difference(row.geometry)
+            if start_area != aoi.geometry[0].area:
+                overlap_tiles.append(dict(Name=row.Name, geometry=row.geometry))
+
+        if not overlap_tiles:
+            return
+
+        tiles = gp.GeoDataFrame(overlap_tiles, crs=epsg)
+        tiles = tiles.to_crs(self.crs)
+
+        logger.info(f"Found {len(tiles)} tiles: {', '.join(sorted(tiles.Name))}")
+        return tiles
+       
