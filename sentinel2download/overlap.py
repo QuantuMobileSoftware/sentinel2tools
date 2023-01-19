@@ -126,7 +126,7 @@ class Sentinel2Overlap:
         Find unique tiles that intersects given aoi, area.
         The same as overlap, but with geometry.
         :param limit: float, min intersection area in km2
-        :return: GeoDataFrame: Tile names and it's geometry in epsg:4326
+        :return: GeoDataFrame: Tile names (Name column) and it's geometry in epsg:4326
         """
 
         logger.info(f"Start finding overlapping tiles")
