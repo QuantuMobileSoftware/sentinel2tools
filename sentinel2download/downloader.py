@@ -23,6 +23,7 @@ BANDS = frozenset(('TCI', 'B01', 'B02', 'B03', 'B04', 'B05', 'B06',
 CONSTRAINTS = MappingProxyType({'CLOUDY_PIXEL_PERCENTAGE': 100.0, 'NODATA_PIXEL_PERCENTAGE': 100.0, })
 
 FOLDER_SUFFIX = "_$folder$"
+DATE_PATTERN = r"_(\d+)T\d+_"
 
 
 class Sentinel2Downloader:
@@ -46,7 +47,7 @@ class Sentinel2Downloader:
         self.metadata_suffix = 'MTD_TL.xml'
 
     @staticmethod
-    def _prefix_to_date(prefix, date_pattern=r"_(\d+)T\d+_", date_format='%Y%m%d') -> datetime:
+    def _prefix_to_date(prefix, date_pattern=DATE_PATTERN, date_format='%Y%m%d') -> datetime:
         # acquired date: 20200812T113607
         search = re.search(date_pattern, prefix)
         date = search.group(1)
@@ -164,8 +165,15 @@ class Sentinel2Downloader:
 
         return blobs_to_load
 
+    @staticmethod
+    def extract_date(s):
+        match = re.search(DATE_PATTERN, s)
+        if match:
+            return match.group(1)
+        return ''
+
     def _get_latest_available_date_prefix(self, safe_prefixes) -> List[str]:
-        prefixes_date_descend = sorted(safe_prefixes, reverse=True)
+        prefixes_date_descend = sorted(safe_prefixes, key=lambda s: self.extract_date(s), reverse=True)
         if self.full_download:
             return prefixes_date_descend[:1]
         for prefix in prefixes_date_descend:
