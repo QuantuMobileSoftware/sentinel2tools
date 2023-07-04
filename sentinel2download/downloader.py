@@ -23,6 +23,7 @@ BANDS = frozenset(('TCI', 'B01', 'B02', 'B03', 'B04', 'B05', 'B06',
 CONSTRAINTS = MappingProxyType({'CLOUDY_PIXEL_PERCENTAGE': 100.0, 'NODATA_PIXEL_PERCENTAGE': 100.0, })
 
 FOLDER_SUFFIX = "_$folder$"
+DATE_PATTERN = r"_(\d+)T\d+_"
 
 
 class Sentinel2Downloader:
@@ -45,14 +46,17 @@ class Sentinel2Downloader:
         self.bucket = self.client.get_bucket('gcp-public-data-sentinel-2')
         self.metadata_suffix = 'MTD_TL.xml'
 
-    def _filter_by_dates(self, safe_prefixes) -> List[str]:
+    @staticmethod
+    def _prefix_to_date(prefix, date_pattern=DATE_PATTERN, date_format='%Y%m%d') -> datetime:
         # acquired date: 20200812T113607
-        date_pattern = r"_(\d+)T\d+_"
+        search = re.search(date_pattern, prefix)
+        date = search.group(1)
+        return datetime.strptime(date, date_format)
+
+    def _filter_by_dates(self, safe_prefixes) -> List[str]:
         filtered = list()
         for safe_prefix in safe_prefixes:
-            search = re.search(date_pattern, safe_prefix)
-            date = search.group(1)
-            date = datetime.strptime(date, '%Y%m%d')
+            date = self._prefix_to_date(safe_prefix)
             if date in self.date_range:
                 filtered.append(safe_prefix)
         return filtered
@@ -161,9 +165,29 @@ class Sentinel2Downloader:
 
         return blobs_to_load
 
+    @staticmethod
+    def extract_date(s):
+        match = re.search(DATE_PATTERN, s)
+        if match:
+            return match.group(1)
+        return ''
+
+    def _get_latest_available_date_prefix(self, safe_prefixes) -> List[str]:
+        prefixes_date_descend = sorted(safe_prefixes, key=lambda s: self.extract_date(s), reverse=True)
+        if self.full_download:
+            return prefixes_date_descend[:1]
+        for prefix in prefixes_date_descend:
+            blobs_to_load = self._get_blobs_to_load([prefix])
+            if blobs_to_load:
+                return [prefix]
+        return []
+
     def _get_filtered_prefixes(self, tile_prefix) -> List[str]:
         # filter store items by base prefix, ex: tiles/36/U/YA/
         safe_prefixes = self._get_safe_prefixes(tile_prefix)
+        if self.latest_date:
+            # get latest available image .SAFE path
+            return self._get_latest_available_date_prefix(safe_prefixes)
         # filter .SAFE paths by date range
         filtered_prefixes = self._filter_by_dates(safe_prefixes)
         return filtered_prefixes
@@ -202,7 +226,7 @@ class Sentinel2Downloader:
         return results
 
     def _setup(self, product_type, tiles, start_date, end_date, bands,
-               constraints, output_dir, cores, full_download):
+               constraints, output_dir, cores, full_download, latest_date):
         if product_type not in PRODUCT_TYPE:
             raise ValueError(f"Provide proper Sentinel2 type: {PRODUCT_TYPE}")
         self.product_type = product_type
@@ -234,6 +258,7 @@ class Sentinel2Downloader:
         self.output_dir = output_dir
         self.cores = cores
         self.full_download = full_download
+        self.latest_date = latest_date
 
     def download(self,
                  product_type: str,
@@ -245,7 +270,8 @@ class Sentinel2Downloader:
                  constraints: dict = CONSTRAINTS,
                  output_dir: str = './sentinel2imagery',
                  cores: int = 5,
-                 full_download: bool = False) -> Optional[List]:
+                 full_download: bool = False,
+                 latest_date: bool = False) -> Optional[List]:
         """
         :param product_type: str, "L2A" or "L1C" Sentinel2 products
         :param tiles: list, tiles to load (ex: {36UYA, 36UYB})
@@ -258,11 +284,13 @@ class Sentinel2Downloader:
         :param output_dir: str, path to loading dir, default: './sentinel2imagery'
         :param cores: int, number of cores, default: 5
         :param full_download: bool, option for full download of Sentinel-2 .SAFE folder, default: False
+        :param latest_date: bool, option for retrieving last available image, default: False
         :return: [tuple, None], tuples (save_path, blob_name), if save_path is None, the blob not loaded
         or None if nothing to load
         """
 
-        self._setup(product_type, tiles, start_date, end_date, bands, constraints, output_dir, cores, full_download)
+        self._setup(product_type, tiles, start_date, end_date, bands, constraints, output_dir, cores, full_download,
+                    latest_date)
 
         logger.info("Start downloading...")
         start_time = time.time()
